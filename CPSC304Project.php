@@ -23,22 +23,54 @@
     Lname: <input type="text" name="insLname"> <br /><br />
     Email : <input type="text" name="insEmail"> <br /><br />
     Phone : <input type="text" name="insPhone"> <br /><br />
-    Dob : <input type="date" name="insDob"> <br /><br />
-    Resid : <input type="text" name="insResid"> <br /><br />
-
+    Dob (DD-MMM-YY) : <input type="text" name="insDob"> <br /><br />
+    Resid (10-digit number): <input type="text" name="insResid"> <br /><br />
     <input type="submit" value="Insert" name="insertSubmit"></p>
 </form>
 
 <hr />
 
-<h2>Update Phone in Resident
-</h2>
+
+<h2>Display a Resident by ID (Select)</h2>
+        <form method="GET" action="CPSC304Project.php"> <!--refresh page when submitted-->
+            <input type="hidden" id="DisplayResidentQueryRequest" name="DisplayResidentQueryRequest">
+            Resident ID: <input type="text" name="insResidentID"> <br /><br />
+            <input type="submit" name="selectResident"></p>
+        </form>
+        
+<hr />
+
+
+<h2>Project Building Attibutes for a given Building</h2>
+        <form method="GET" action="CPSC304Project.php"> <!--refresh page when submitted-->
+            <input type="hidden" id="ProjectBuildingQueryRequest" name="ProjectBuildingQueryRequest">
+            BuildingID: <input type="text" name="bid"> <br /><br />
+            <input type="submit" name="projectBuilding"></p>
+        </form>
+
+<hr />
+
+
+<h2>Update Phone in Resident</h2>
 <p>The values are case sensitive and if you enter in the wrong case, the update statement will not do anything.</p>
 
 <form method="POST" action="CPSC304Project.php"> <!--refresh page when submitted-->
     <input type="hidden" id="updateQueryRequest" name="updateQueryRequest">
     Old Phone: <input type="text" name="oldPhone"> <br /><br />
     New Phone: <input type="text" name="newPhone"> <br /><br />
+
+    <input type="submit" value="Update" name="updateSubmit"></p>
+</form>
+
+<hr />
+
+<h2>Update Suite Rental Rate</h2>
+<p>The values are case sensitive and if you enter in the wrong case, the update statement will not do anything.</p>
+<form method="POST" action="CPSC304Project.php"> <!--refresh page when submitted-->
+    <input type="hidden" id="updateRentalRateRequest" name="updateRentalRateRequest">
+    Building: <input type="text" name="'buildingID'"> <br /><br />
+    Suite: <input type="text" name="'unitNumber'"> <br /><br />
+    New Rental Rate: <input type="text" name="updatedRate"> <br /><br /> 
 
     <input type="submit" value="Update" name="updateSubmit"></p>
 </form>
@@ -52,11 +84,34 @@
     <input type="submit" name="countTuples"></p>
 </form>
 
+<hr />
+
+<h2>Aggregation with GroupBy - get Number of Suites in each Building</h2>
+        <form method="GET" action="CPSC304Project.php"> <!--refresh page when submitted-->
+            <input type="hidden" id="AggGroupByRequest" name="AggGroupByRequest">
+            <input type="submit" name="AggGroupBy"></p>
+        </form>
 
 <hr />
 
-<h2>Display the Tables
-</h2>
+
+<h2>Find Cheapest Building by Average Suite Cost</h2>
+        <form method="GET" action="CPSC304Project.php"> <!--refresh page when submitted-->
+            <input type="hidden" id="cheapestAVGRequeset" name="cheapestAVGRequeset">
+            <input type="submit" name="nestedAGG"></p>
+        </form>
+
+<hr />
+
+<h2>Number of Stalls for Parkades above Ground</h2>
+        <form method="GET" action="CPSC304Project.php"> <!--refresh page when submitted-->
+            <input type="hidden" id="parkadeStallsRequest" name="parkadeStallsRequest">
+            <input type="submit" name="parkadeStalls"></p>
+        </form>
+
+<hr />
+
+<h2>Display the Tables</h2>
 <form method="GET" action="CPSC304Project.php"> <!--refresh page when submitted-->
     <input type="hidden" id="displayTupleRequest" name="displayTupleRequest">
     <input type="submit" name="displayTuples"></p>
@@ -325,6 +380,17 @@ function handleUpdateRequest() {
     OCICommit($db_conn);
 }
 
+function handleUpdateSuiteRentalRate() {
+    global $db_comm;
+
+    $unit_number = $_POST['unitNumber'];
+    $buildingID = $_POST['buildingID'];
+
+    $new_rate = $_POST['updatedRate'];
+
+    executePlainSQL("UPDATE Suites SET Rentalrate='" . $new_rate . "' WHERE Unitnum='" . $unit_number . "'");
+}
+
 function handleResetRequest() {
     global $db_conn;
     // Drop old table
@@ -483,6 +549,74 @@ function handleInsertRequest() {
     OCICommit($db_conn);
 }
 
+function handleResidentSelectRequest() {
+    global $db_conn;
+
+    $resID = $_POST['insResidentID'];
+    $result = executePlainSQL("SELECT * FROM Resident WHERE Resid = " . $_GET['insResidentID']);
+    
+    echo printResult($result);
+}
+
+function handleBuildingAttributeProjectRequest() {
+    global $db_conn;
+
+    $city = $_POST['bid'];
+    $result = executePlainSQL("SELECT  Buildingname, Yearbuilt, Numstories FROM Building WHERE Buildingid  =  " . $_GET['bid']);
+    
+    echo printResult9($result);
+}
+
+// Aggregation with Having
+function handleParkadeAboveGround() {
+    global $db_comm;
+
+    $result = executePlainSQL("SELECT SUM(Numstalls), Parkadeid FROM Parkade GROUP BY Parkadeid HAVING SUM(Floor) >= 0");
+
+    echo "<br>Retrieved data from table Parkade:<br>";
+    echo "<table>";
+    echo "<tr><th>Number of Stalls</th><th>Parkade ID</th></tr>";
+    while ($row = OCI_Fetch_Array($result, OCI_BOTH)) {
+        echo "<tr><td>" . $row[0] . "</td><td>" . $row[1] .  "</td></tr>"; //or just use "echo $row[0]"
+    }
+    echo "</table>";
+}
+
+function handleAggGroupByRequest() {
+    global $db_conn;
+
+    $result = executePlainSQL("SELECT COUNT(*), SuiteBuildingid FROM Suites GROUP BY SuiteBuildingid");
+    
+    echo "<br>Retrieved data from table Suites:<br>";
+    echo "<table>";
+    echo "<tr><th>Count</th><th>SuiteBuildingid</th></tr>";
+    while ($row = OCI_Fetch_Array($result, OCI_BOTH)) {
+        echo "<tr><td>" . $row[0] . "</td><td>" . $row["SUITEBUILDINGID"] .  "</td></tr>"; //or just use "echo $row[0]"
+    }
+    echo "</table>";
+}
+
+// Nested Aggegation with Grouping
+function handleFindCheapestAverageRequest() {
+    global $db_conn;
+
+    $result = executePlainSQL("SELECT Temp.SuiteBuildingid, Temp.avgcost 
+    FROM (SELECT Suites.SuiteBuildingid , AVG(Suites.Cost) as avgcost 
+          FROM Suites  
+          GROUP BY Suites.SuiteBuildingid) AS Temp
+    WHERE Temp.avgcost = (SELECT MIN(Temp.avgcost) FROM Temp)");
+
+   
+
+    echo "<br>Retrieved data from table Suites:<br>";
+    echo "<table>";
+    echo "<tr><th>BuildingID</th><th>Average Cost</th></tr>";
+    while ($row = OCI_Fetch_Array($result, OCI_BOTH)) {
+        echo "<tr><td>" . $row[0] . "</td><td>" . $row[1] .  "</td></tr>"; //or just use "echo $row[0]"
+    }
+    echo "</table>";
+}
+
 function handleCountRequest() {
     global $db_conn;
 
@@ -527,6 +661,8 @@ function handlePOSTRequest() {
             handleUpdateRequest();
         } else if (array_key_exists('insertQueryRequest', $_POST)) {
             handleInsertRequest();
+        } else if (array_key_exists('updateRentalRateRequest', $_POST)) {
+            handleUpdateSuiteRentalRate();
         }
 
         disconnectFromDB();
@@ -541,15 +677,30 @@ function handleGETRequest() {
             handleCountRequest();
         } else if (array_key_exists('displayTuples', $_GET)) {
             handleDisplayRequest();
+        } else if (array_key_exists('selectResident', $_GET)) {
+            handleResidentSelectRequest();
+        } else if (array_key_exists('AggGroupBy', $_GET)) {
+            handleAggGroupByRequest();
+        }  else if (array_key_exists('projectBuilding', $_GET)) {
+            handleBuildingAttributeProjectRequest();
+        } else if (array_key_exists('nestedAGG', $_GET)) {
+            handleFindCheapestAverageRequest();
+        } else if (array_key_exists('parkadeStalls', $_GET)) {
+            handleParkadeAboveGround();
         }
-
         disconnectFromDB();
     }
 }
 
 if (isset($_POST['reset']) || isset($_POST['updateSubmit']) || isset($_POST['insertSubmit'])) {
     handlePOSTRequest();
-} else if (isset($_GET['countTupleRequest'])|| isset($_GET['displayTupleRequest'])) {
+} else if (isset($_GET['countTupleRequest'])|| 
+isset($_GET['displayTupleRequest']) || 
+isset($_GET['DisplayResidentQueryRequest']) || 
+isset($_GET['AggGroupByRequest']) || 
+isset($_GET['ProjectBuildingQueryRequest']) ||
+isset($_GET['cheapestAVGRequeset']) ||
+isset($_GET['parkadeStallsRequest'])) {
     handleGETRequest();
 }
 ?>
