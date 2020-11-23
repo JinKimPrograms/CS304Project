@@ -41,6 +41,15 @@
 <hr />
 
 
+<h2>Display number of Stalls on same floor as the Resident Stall (Join)</h2>
+<form method="GET" action="CPSC304Project.php"> <!--refresh page when submitted-->
+    <input type="hidden" id="DisplayNumOFStallsQueryRequest" name="DisplayNumOFStallsQueryRequest">
+    Resident ID: <input type="text" name="insResidentID"> <br /><br />
+    <input type="submit" name="selectnumStalls"></p>
+</form>
+
+<hr />
+
 <h2>Remove a Resident by ID</h2>
 <form method="GET" action="CPSC304Project.php"> <!--refresh page when submitted-->
     <input type="hidden" id="RemoveResidentQueryRequest" name="RemoveResidentQueryRequest">
@@ -102,6 +111,13 @@
 
 <hr />
 
+<h2>Manager for all buildings in Ottawa and Montreal</h2>
+<form method="GET" action="CPSC304Project.php"> <!--refresh page when submitted-->
+    <input type="hidden" id="managerRequest" name="managerRequest">
+    <input type="submit" name="manager"></p>
+</form>
+
+<hr />
 
 <h2>Find Cheapest Building by Average Suite Cost</h2>
         <form method="GET" action="CPSC304Project.php"> <!--refresh page when submitted-->
@@ -348,6 +364,16 @@ function printResult14($result) { //prints results from a select statement
     echo "</table>";
 }
 
+function printResult15($result) { //prints results from a select statement
+    echo "<br>Number of Stalls on the same floor:<br>";
+    echo "<table>";
+    echo "<tr><th>Numstalls</th></tr>";
+    while ($row = OCI_Fetch_Array($result, OCI_BOTH)) {
+        echo "<tr><td>" . $row["NUMSTALLS"] .  "</td></tr>"; //or just use "echo $row[0]"
+    }
+    echo "</table>";
+}
+
 
 
 
@@ -573,6 +599,15 @@ function handleResidentSelectRequest() {
     echo printResult($result);
 }
 
+function handleNumOfResidentStallsSelectRequest() {
+    global $db_conn;
+
+    $stallNum = $_POST['insResid'];
+    $result = executePlainSQL("SELECT Parkade.Numstalls FROM Parkade, ResidentStall  WHERE Parkade.Parkadeid = ResidentStall.Stallid AND ResidentStall.Residentid = " . $_GET['insResidentID']);
+
+    echo printresult15($result);
+}
+
 
 function handleremoveResidentSelectRequest() {
     global $db_conn;
@@ -591,6 +626,25 @@ function handleBuildingAttributeProjectRequest() {
     
     echo printResult9($result);
 }
+
+function handleManagerMontrealOttawa() {
+    global $db_comm;
+
+    $result = executePlainSQL("SELECT Manager2.ManagerID, Manager2.ManagerName 
+FROM Manager2, Building 
+WHERE Manager2.ManagerID = Building.Managerid 
+AND NOT EXISTS ((SELECT M2.ManagerID FROM Manager2 M2, Building B 
+WHERE M2.ManagerID = B.Managerid ) EXCEPT (SELECT M3.ManagerID FROM Manager2 M3, Building B3 WHERE M3.ManagerID = B3.Managerid AND M3.ManagerID = Manager2.ManagerID AND (B3.City ='Montreal' OR B3.City ='Ottawa')))");
+
+    echo "<br>Retrieved manager who manages all building in Ottawa And Montreal:<br>";
+    echo "<table>";
+    echo "<tr><th>ManagerID</th><th>ManagerName</th></tr>";
+    while ($row = OCI_Fetch_Array($result, OCI_BOTH)) {
+        echo "<tr><td>" . $row["MANAGERID"] . "</td><td>" . $row["MANAGERNAME"] . "</td></tr>"; //or just use "echo $row[0]"
+    }
+    echo "</table>";
+}
+
 
 // Aggregation with Having
 function handleParkadeAboveGround() {
@@ -676,6 +730,9 @@ function handleDisplayRequest() {
 
 
 
+
+
+
 // HANDLE ALL POST ROUTES
 // A better coding practice is to have one method that reroutes your requests accordingly. It will make it easier to add/remove functionality.
 function handlePOSTRequest() {
@@ -704,6 +761,8 @@ function handleGETRequest() {
             handleDisplayRequest();
         } else if (array_key_exists('selectResident', $_GET)) {
             handleResidentSelectRequest();
+        } else if (array_key_exists('selectnumStalls', $_GET)) {
+            handleNumOfResidentStallsSelectRequest();
         } else if (array_key_exists('removeResident', $_GET)) {
             handleremoveResidentSelectRequest();
         } else if (array_key_exists('AggGroupBy', $_GET)) {
@@ -712,6 +771,8 @@ function handleGETRequest() {
             handleBuildingAttributeProjectRequest();
         } else if (array_key_exists('nestedAGG', $_GET)) {
             handleFindCheapestAverageRequest();
+        } else if (array_key_exists('manager', $_GET)) {
+            handleManagerMontrealOttawa();
         } else if (array_key_exists('parkadeStalls', $_GET)) {
             handleParkadeAboveGround();
         }
@@ -719,14 +780,16 @@ function handleGETRequest() {
     }
 }
 
-if (isset($_POST['reset']) || isset($_POST['updateSubmit']) || isset($_POST['updateNumber']) || isset($_POST['insertSubmit'])|| isset($_POST['removeResident'])) {
+if (isset($_POST['reset']) || isset($_POST['updateSubmit']) || isset($_POST['insertSubmit'])|| isset($_POST['removeResident'])) {
     handlePOSTRequest();
 } else if (isset($_GET['countTupleRequest'])||
     isset($_GET['displayTupleRequest']) ||
     isset($_GET['DisplayResidentQueryRequest']) ||
     isset($_GET['RemoveResidentQueryRequest']) ||
     isset($_GET['AggGroupByRequest']) ||
+    isset($_GET['DisplayNumOFStallsQueryRequest']) ||
     isset($_GET['ProjectBuildingQueryRequest']) ||
+    isset($_GET['managerRequest']) ||
     isset($_GET['cheapestAVGRequeset']) ||
     isset($_GET['parkadeStallsRequest'])) {
     handleGETRequest();
