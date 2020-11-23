@@ -571,7 +571,7 @@ function handleBuildingAttributeProjectRequest() {
 function handleParkadeAboveGround() {
     global $db_comm;
 
-    $result = executePlainSQL("SELECT SUM(Numstalls), Parkadeid FROM Parkade GROUP BY Parkadeid HAVING SUM(Floor) >= 0");
+    $result = executePlainSQL("SELECT SUM(Numstalls), Parkadeid FROM Parkade GROUP BY Parkadeid HAVING SUM(Parkade.Floor) >= 0");
 
     echo "<br>Retrieved data from table Parkade:<br>";
     echo "<table>";
@@ -600,14 +600,13 @@ function handleAggGroupByRequest() {
 function handleFindCheapestAverageRequest() {
     global $db_conn;
 
-    $result = executePlainSQL("SELECT Temp.SuiteBuildingid, Temp.avgcost 
-    FROM (SELECT Suites.SuiteBuildingid , AVG(Suites.Cost) as avgcost 
-          FROM Suites  
-          GROUP BY Suites.SuiteBuildingid) AS Temp
-    WHERE Temp.avgcost = (SELECT MIN(Temp.avgcost) FROM Temp)");
+    $result = executePlainSQL("SELECT S.SuiteBuildingid, AVG(S.cost)
+    FROM Suites S, Building B
+    WHERE Buildingid = SuiteBuildingid
+    GROUP BY B.Buildingid
+    HAVING AVG(S.Cost) <= ALL (SELECT AVG(S1.Cost) FROM Suites S1 GROUP BY S1.SuiteBuildingid)");
 
    
-
     echo "<br>Retrieved data from table Suites:<br>";
     echo "<table>";
     echo "<tr><th>BuildingID</th><th>Average Cost</th></tr>";
