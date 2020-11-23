@@ -41,6 +41,15 @@
 <hr />
 
 
+<h2>Remove a Resident by ID</h2>
+<form method="GET" action="CPSC304Project.php"> <!--refresh page when submitted-->
+    <input type="hidden" id="RemoveResidentQueryRequest" name="RemoveResidentQueryRequest">
+    Resident ID: <input type="text" name="insResidentID"> <br /><br />
+    <input type="submit" name="removeResident"></p>
+</form>
+
+<hr />
+
 <h2>Project Building Attibutes for a given Building</h2>
         <form method="GET" action="CPSC304Project.php"> <!--refresh page when submitted-->
             <input type="hidden" id="ProjectBuildingQueryRequest" name="ProjectBuildingQueryRequest">
@@ -50,16 +59,15 @@
 
 <hr />
 
-
 <h2>Update Phone in Resident</h2>
 <p>The values are case sensitive and if you enter in the wrong case, the update statement will not do anything.</p>
 
 <form method="POST" action="CPSC304Project.php"> <!--refresh page when submitted-->
     <input type="hidden" id="updateQueryRequest" name="updateQueryRequest">
-    Old Phone: <input type="text" name="oldPhone"> <br /><br />
+    ResidentID: <input type="text" name="residentID"> <br /><br />
     New Phone: <input type="text" name="newPhone"> <br /><br />
 
-    <input type="submit" value="Update" name="updateSubmit"></p>
+    <input type="submit" value="Update" name="updateNumber"></p>
 </form>
 
 <hr />
@@ -372,11 +380,11 @@ function disconnectFromDB() {
 function handleUpdateRequest() {
     global $db_conn;
 
-    $old_phone = $_POST['oldPhone'];
+    $residentID = $_POST['residentID'];
     $new_phone = $_POST['newPhone'];
 
     // you need the wrap the old name and new name values with single quotations
-    executePlainSQL("UPDATE Resident SET Phone='" . $new_phone . "' WHERE Phone='" . $old_phone . "'");
+    executePlainSQL("UPDATE Resident SET Resident.Phone='" . $new_phone . "' WHERE Resident.Resid ='" . $residentID . "'");
     OCICommit($db_conn);
 }
 
@@ -391,24 +399,31 @@ function handleUpdateSuiteRentalRate() {
     executePlainSQL("UPDATE Suites SET Rentalrate='" . $new_rate . "' WHERE Unitnum='" . $unit_number . "'");
 }
 
+function checkTableExists($table) {
+    global $db_conn;
+
+    $count = executePlainSQL("SELECT COUNT(*) FROM $table ");
+    return($count>0);}
+
 function handleResetRequest() {
     global $db_conn;
     // Drop old table
-    executePlainSQL("DROP TABLE Resident CASCADE CONSTRAINTS");
-    executePlainSQL("DROP TABLE Owner");
-    executePlainSQL("DROP TABLE Renter");
-    executePlainSQL("DROP TABLE Parkade CASCADE CONSTRAINTS");
-    executePlainSQL("DROP TABLE VisitorStall");
-    executePlainSQL("DROP TABLE ResidentStall");
-    executePlainSQL("DROP TABLE Insurance CASCADE CONSTRAINTS");
-    executePlainSQL("DROP TABLE Location1 CASCADE CONSTRAINTS");
-    executePlainSQL("DROP TABLE Location2 CASCADE CONSTRAINTS");
-    executePlainSQL("DROP TABLE Manager1 CASCADE CONSTRAINTS");
-    executePlainSQL("DROP TABLE Manager2 CASCADE CONSTRAINTS");
-    executePlainSQL("DROP TABLE Building CASCADE CONSTRAINTS");
-    executePlainSQL("DROP TABLE Suites CASCADE CONSTRAINTS");
-    executePlainSQL("DROP TABLE Elevator CASCADE CONSTRAINTS");
-    executePlainSQL("DROP TABLE Stairs CASCADE CONSTRAINTS");
+
+    if(checkTableExists(Resident)){executePlainSQL("DROP TABLE Resident CASCADE CONSTRAINTS");}
+    if(checkTableExists(Owner)){executePlainSQL("DROP TABLE Owner");}
+    if(checkTableExists(Renter)){executePlainSQL("DROP TABLE Renter");}
+    if(checkTableExists(Parkade)){executePlainSQL("DROP TABLE Parkade CASCADE CONSTRAINTS");}
+    if(checkTableExists(VisitorStall)){executePlainSQL("DROP TABLE VisitorStall");}
+    if(checkTableExists(ResidentStall)){executePlainSQL("DROP TABLE ResidentStall");}
+    if(checkTableExists(Insurance)){executePlainSQL("DROP TABLE Insurance CASCADE CONSTRAINTS");}
+    if(checkTableExists(Location1)){executePlainSQL("DROP TABLE Location1 CASCADE CONSTRAINTS");}
+    if(checkTableExists(Location2)){executePlainSQL("DROP TABLE Location2 CASCADE CONSTRAINTS");}
+    if(checkTableExists(Manager1)){executePlainSQL("DROP TABLE Manager1 CASCADE CONSTRAINTS");}
+    if(checkTableExists(Manager2)){executePlainSQL("DROP TABLE Manager2 CASCADE CONSTRAINTS");}
+    if(checkTableExists(Building)){executePlainSQL("DROP TABLE Building CASCADE CONSTRAINTS");}
+    if(checkTableExists(Suites)){executePlainSQL("DROP TABLE Suites CASCADE CONSTRAINTS");}
+    if(checkTableExists(Elevator)){executePlainSQL("DROP TABLE Elevator CASCADE CONSTRAINTS");}
+    if(checkTableExists(Stairs)){executePlainSQL("DROP TABLE Stairs CASCADE CONSTRAINTS");}
 
 
     // Create new table
@@ -558,6 +573,16 @@ function handleResidentSelectRequest() {
     echo printResult($result);
 }
 
+
+function handleremoveResidentSelectRequest() {
+    global $db_conn;
+
+    $resID = $_POST['insResidentID'];
+    executePlainSQL(" DELETE FROM Resident WHERE Resid = " . $_GET['insResidentID']);
+
+    OCICommit($db_conn);
+}
+
 function handleBuildingAttributeProjectRequest() {
     global $db_conn;
 
@@ -650,6 +675,7 @@ function handleDisplayRequest() {
 
 
 
+
 // HANDLE ALL POST ROUTES
 // A better coding practice is to have one method that reroutes your requests accordingly. It will make it easier to add/remove functionality.
 function handlePOSTRequest() {
@@ -678,6 +704,8 @@ function handleGETRequest() {
             handleDisplayRequest();
         } else if (array_key_exists('selectResident', $_GET)) {
             handleResidentSelectRequest();
+        } else if (array_key_exists('removeResident', $_GET)) {
+            handleremoveResidentSelectRequest();
         } else if (array_key_exists('AggGroupBy', $_GET)) {
             handleAggGroupByRequest();
         }  else if (array_key_exists('projectBuilding', $_GET)) {
@@ -691,15 +719,16 @@ function handleGETRequest() {
     }
 }
 
-if (isset($_POST['reset']) || isset($_POST['updateSubmit']) || isset($_POST['insertSubmit'])) {
+if (isset($_POST['reset']) || isset($_POST['updateSubmit']) || isset($_POST['updateNumber']) || isset($_POST['insertSubmit'])|| isset($_POST['removeResident'])) {
     handlePOSTRequest();
-} else if (isset($_GET['countTupleRequest'])|| 
-isset($_GET['displayTupleRequest']) || 
-isset($_GET['DisplayResidentQueryRequest']) || 
-isset($_GET['AggGroupByRequest']) || 
-isset($_GET['ProjectBuildingQueryRequest']) ||
-isset($_GET['cheapestAVGRequeset']) ||
-isset($_GET['parkadeStallsRequest'])) {
+} else if (isset($_GET['countTupleRequest'])||
+    isset($_GET['displayTupleRequest']) ||
+    isset($_GET['DisplayResidentQueryRequest']) ||
+    isset($_GET['RemoveResidentQueryRequest']) ||
+    isset($_GET['AggGroupByRequest']) ||
+    isset($_GET['ProjectBuildingQueryRequest']) ||
+    isset($_GET['cheapestAVGRequeset']) ||
+    isset($_GET['parkadeStallsRequest'])) {
     handleGETRequest();
 }
 ?>
