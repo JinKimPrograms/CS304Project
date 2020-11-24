@@ -107,7 +107,7 @@
 
 <hr />
 
-<h2>Number of Stalls for Parkades above Ground (Aggregation with Having)</h2>
+<h2>Number of  Stalls for Parkades with Visistor Stalls (Aggregation with Having)</h2>
 <form method="GET" action="CPSC304Project.php"> <!--refresh page when submitted-->
     <input type="hidden" id="parkadeStallsRequest" name="parkadeStallsRequest">
     <input type="submit" name="parkadeStalls"></p>
@@ -616,7 +616,7 @@ function handleBuildingAttributeProjectRequest() {
 }
 
 
-// Division : Find the manager who manage all buildings in Ottawa or Montreal
+// Division : Find the manager who manage all buildings in Ottawa and Montreal
 function handleManagerMontrealOttawa() {
     global $db_comm;
 
@@ -639,16 +639,20 @@ function handleManagerMontrealOttawa() {
 
 
 // Aggregation with Having
-function handleParkadeAboveGround() {
+function handleParkadeWithVisistorStall() {
     global $db_comm;
 
-    $result = executePlainSQL("SELECT SUM(Numstalls), Parkadeid FROM Parkade GROUP BY Parkadeid HAVING SUM(Parkade.Floor) >= 0");
+    $result = executePlainSQL("SELECT COUNT(*), Parkadeid
+    FROM Parkade P, VisitorStall V
+    WHERE P.Parkadeid = V.Stallid
+    GROUP BY Parkadeid
+    HAVING COUNT(*) > 0");
 
     echo "<br>Retrieved data from table Parkade:<br>";
     echo "<table>";
-    echo "<tr><th>Number of Stalls</th><th>Parkade ID</th></tr>";
+    echo "<tr><th>Number of Visitor Stalls</th><th>Parkade ID</th></tr>";
     while ($row = OCI_Fetch_Array($result, OCI_BOTH)) {
-        echo "<tr><td>" . $row[0] . "</td><td>" . $row[1] .  "</td></tr>"; //or just use "echo $row[0]"
+        echo "<tr><td>" . $row[0] . "</td><td>" . $row[1] .  "</td></tr>"; 
     }
     echo "</table>";
 }
@@ -764,7 +768,7 @@ function handleGETRequest() {
         } else if (array_key_exists('manager', $_GET)) {
             handleManagerMontrealOttawa();
         } else if (array_key_exists('parkadeStalls', $_GET)) {
-            handleParkadeAboveGround();
+            handleParkadeWithVisistorStall();
         }
         disconnectFromDB();
     }
