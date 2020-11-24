@@ -618,23 +618,36 @@ function handleremoveResidentSelectRequest() {
     OCICommit($db_conn);
 }
 
+//Projection
 function handleBuildingAttributeProjectRequest() {
     global $db_conn;
 
     $city = $_POST['bid'];
-    $result = executePlainSQL("SELECT  Buildingname, Yearbuilt, Numstories FROM Building WHERE Buildingid  =  " . $_GET['bid']);
+    $result = executePlainSQL("SELECT  B.BuildingName, B.Yearbuilt, B.Numstories, M.ManagerName, B.City
+        FROM Building B, Manager2 M
+        WHERE M.ManagerID = B.ManagerID AND B.Buildingid  =  " . $_GET['bid']);
     
-    echo printResult9($result);
+    echo "<br>Retrieved data from table Building:<br>";
+    echo "<table>";
+    echo "<tr><th>Building Name</th><th>Year Built</th><th>Number of Stories</th><th>Managed By:</th><th>Located In</th></tr>";
+    while ($row = OCI_Fetch_Array($result, OCI_BOTH)) {
+        echo "<tr><td>" . $row[0] . "</td><td>" . $row[1] .  "</td><td>" . $row[2] .  "</td><td>" . $row[3] . "</td><td>" . $row[4] . "</td></tr>"; 
+    }
+    echo "</table>";
 }
 
+
+// Division : Find the manager who manage all buildings in Ottawa or Montreal
 function handleManagerMontrealOttawa() {
     global $db_comm;
 
-    $result = executePlainSQL("SELECT Manager2.ManagerID, Manager2.ManagerName 
-FROM Manager2, Building 
-WHERE Manager2.ManagerID = Building.Managerid 
-AND NOT EXISTS ((SELECT M2.ManagerID FROM Manager2 M2, Building B 
-WHERE M2.ManagerID = B.Managerid ) EXCEPT (SELECT M3.ManagerID FROM Manager2 M3, Building B3 WHERE M3.ManagerID = B3.Managerid AND M3.ManagerID = Manager2.ManagerID AND (B3.City ='Montreal' OR B3.City ='Ottawa')))");
+    $result = executePlainSQL("SELECT M.ManagerID, M.ManagerName
+        FROM Manager2 M
+        WHERE NOT EXISTS (
+            (SELECT  B.ManagerID FROM Building B WHERE B.City = 'Montreal' OR B.City = 'Ottawa')
+            MINUS 
+            (SELECT B2.ManagerID FROM Building B2 WHERE  B2.Managerid = M.ManagerID)
+            )");
 
     echo "<br>Retrieved manager who manages all building in Ottawa And Montreal:<br>";
     echo "<table>";
@@ -679,18 +692,18 @@ function handleAggGroupByRequest() {
 function handleFindCheapestAverageRequest() {
     global $db_conn;
 
-    $result = executePlainSQL("SELECT S.SuiteBuildingid, AVG(S.cost)
+    $result = executePlainSQL("SELECT S.SuiteBuildingid, B.Buildingname, AVG(S.cost)
     FROM Suites S, Building B
-    WHERE Buildingid = SuiteBuildingid
-    GROUP BY B.Buildingid
-    HAVING AVG(S.Cost) <= ALL (SELECT AVG(S1.Cost) FROM Suites S1 GROUP BY S1.SuiteBuildingid)");
+    WHERE Buildingid = SuiteBuildingid 
+    GROUP BY B.Buildingname, S.SuiteBuildingid
+    HAVING AVG(S.Cost) >= ALL (SELECT AVG(S1.Cost) FROM Suites S1, Building B1 GROUP BY S1.SuiteBuildingid)");
 
    
     echo "<br>Retrieved data from table Suites:<br>";
     echo "<table>";
-    echo "<tr><th>BuildingID</th><th>Average Cost</th></tr>";
+    echo "<tr><th>BuildingID</th><th>Building Name</th><th>Average Cost </th></tr>";
     while ($row = OCI_Fetch_Array($result, OCI_BOTH)) {
-        echo "<tr><td>" . $row[0] . "</td><td>" . $row[1] .  "</td></tr>"; //or just use "echo $row[0]"
+        echo "<tr><td>" . $row[0] . "</td><td>" . $row[1] . "</td><td>" . $row[2] . "</td></tr>"; //or just use "echo $row[0]"
     }
     echo "</table>";
 }
