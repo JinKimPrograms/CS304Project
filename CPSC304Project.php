@@ -99,7 +99,7 @@
 
 <hr />
 
-<h2>Find Cheapest Building by Average Suite Cost (Nested Aggregation with Group By)</h2>
+<h2>Find Building with Average Cost less than any building in Toronto (Nested Aggregation with Group By)</h2>
 <form method="GET" action="CPSC304Project.php"> <!--refresh page when submitted-->
     <input type="hidden" id="cheapestAVGRequeset" name="cheapestAVGRequeset">
     <input type="submit" name="nestedAGG"></p>
@@ -679,7 +679,7 @@ function handleFindCheapestAverageRequest() {
     FROM Suites S, Building B
     WHERE Buildingid = SuiteBuildingid 
     GROUP BY B.Buildingname, S.SuiteBuildingid
-    HAVING AVG(S.Cost) >= ALL (SELECT AVG(S1.Cost) FROM Suites S1, Building B1 GROUP BY S1.SuiteBuildingid)");
+    HAVING AVG(S.Cost) < ALL (SELECT AVG(S1.Cost) FROM Suites S1, Building B1 WHERE B1.City = 'Toronto' AND B1.Buildingid = S1.SuiteBuildingid  GROUP BY S1.SuiteBuildingid)");
 
 
     echo "<br>Retrieved data from table Suites:<br>";
