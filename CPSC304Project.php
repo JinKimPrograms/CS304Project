@@ -15,7 +15,7 @@
 
 <hr />
 
-<h2>Insert Values into Resident
+<h2>Insert Values into Resident (Insert Operation)
 </h2>
 <form method="POST" action="CPSC304Project.php"> <!--refresh page when submitted-->
     <input type="hidden" id="insertQueryRequest" name="insertQueryRequest">
@@ -31,13 +31,13 @@
 <hr />
 
 
-<h2>Display a Resident by ID (Select)</h2>
-        <form method="GET" action="CPSC304Project.php"> <!--refresh page when submitted-->
-            <input type="hidden" id="DisplayResidentQueryRequest" name="DisplayResidentQueryRequest">
-            Resident ID: <input type="text" name="insResidentID"> <br /><br />
-            <input type="submit" name="selectResident"></p>
-        </form>
-        
+<h2>Display a Resident by ID (Selection)</h2>
+<form method="GET" action="CPSC304Project.php"> <!--refresh page when submitted-->
+    <input type="hidden" id="DisplayResidentQueryRequest" name="DisplayResidentQueryRequest">
+    Resident ID: <input type="text" name="insResidentID"> <br /><br />
+    <input type="submit" name="selectResident"></p>
+</form>
+
 <hr />
 
 
@@ -50,7 +50,7 @@
 
 <hr />
 
-<h2>Remove a Resident by ID</h2>
+<h2>Remove a Resident by ID (Delete Operation)</h2>
 <form method="GET" action="CPSC304Project.php"> <!--refresh page when submitted-->
     <input type="hidden" id="RemoveResidentQueryRequest" name="RemoveResidentQueryRequest">
     Resident ID: <input type="text" name="insResidentID"> <br /><br />
@@ -59,16 +59,16 @@
 
 <hr />
 
-<h2>Project Building Attibutes for a given Building</h2>
-        <form method="GET" action="CPSC304Project.php"> <!--refresh page when submitted-->
-            <input type="hidden" id="ProjectBuildingQueryRequest" name="ProjectBuildingQueryRequest">
-            BuildingID: <input type="text" name="bid"> <br /><br />
-            <input type="submit" name="projectBuilding"></p>
-        </form>
+<h2>Project Building Attributes for a Given Building (Projection)</h2>
+<form method="GET" action="CPSC304Project.php"> <!--refresh page when submitted-->
+    <input type="hidden" id="ProjectBuildingQueryRequest" name="ProjectBuildingQueryRequest">
+    BuildingID: <input type="text" name="bid"> <br /><br />
+    <input type="submit" name="projectBuilding"></p>
+</form>
 
 <hr />
 
-<h2>Update Phone in Resident</h2>
+<h2>Update Phone in Resident (Update Operation)</h2>
 <p>The values are case sensitive and if you enter in the wrong case, the update statement will not do anything.</p>
 
 <form method="POST" action="CPSC304Project.php"> <!--refresh page when submitted-->
@@ -81,15 +81,36 @@
 
 <hr />
 
-<h2>Update Suite Rental Rate</h2>
-<p>The values are case sensitive and if you enter in the wrong case, the update statement will not do anything.</p>
-<form method="POST" action="CPSC304Project.php"> <!--refresh page when submitted-->
-    <input type="hidden" id="updateRentalRateRequest" name="updateRentalRateRequest">
-    Building: <input type="text" name="'buildingID'"> <br /><br />
-    Suite: <input type="text" name="'unitNumber'"> <br /><br />
-    New Rental Rate: <input type="text" name="updatedRate"> <br /><br /> 
 
-    <input type="submit" value="Update" name="updateSubmit"></p>
+
+<h2>Get Number of Suites in each Building (Aggregation with GroupBy)</h2>
+<form method="GET" action="CPSC304Project.php"> <!--refresh page when submitted-->
+    <input type="hidden" id="AggGroupByRequest" name="AggGroupByRequest">
+    <input type="submit" name="AggGroupBy"></p>
+</form>
+
+<hr />
+
+<h2>Manager for all buildings in Ottawa and Montreal (Division)</h2>
+<form method="GET" action="CPSC304Project.php"> <!--refresh page when submitted-->
+    <input type="hidden" id="managerRequest" name="managerRequest">
+    <input type="submit" name="manager"></p>
+</form>
+
+<hr />
+
+<h2>Find Cheapest Building by Average Suite Cost (Nested Aggregation with Group By)</h2>
+<form method="GET" action="CPSC304Project.php"> <!--refresh page when submitted-->
+    <input type="hidden" id="cheapestAVGRequeset" name="cheapestAVGRequeset">
+    <input type="submit" name="nestedAGG"></p>
+</form>
+
+<hr />
+
+<h2>Number of Stalls for Parkades above Ground (Aggregation with Having)</h2>
+<form method="GET" action="CPSC304Project.php"> <!--refresh page when submitted-->
+    <input type="hidden" id="parkadeStallsRequest" name="parkadeStallsRequest">
+    <input type="submit" name="parkadeStalls"></p>
 </form>
 
 <hr />
@@ -100,38 +121,6 @@
     <input type="hidden" id="countTupleRequest" name="countTupleRequest">
     <input type="submit" name="countTuples"></p>
 </form>
-
-<hr />
-
-<h2>Aggregation with GroupBy - get Number of Suites in each Building</h2>
-        <form method="GET" action="CPSC304Project.php"> <!--refresh page when submitted-->
-            <input type="hidden" id="AggGroupByRequest" name="AggGroupByRequest">
-            <input type="submit" name="AggGroupBy"></p>
-        </form>
-
-<hr />
-
-<h2>Manager for all buildings in Ottawa and Montreal</h2>
-<form method="GET" action="CPSC304Project.php"> <!--refresh page when submitted-->
-    <input type="hidden" id="managerRequest" name="managerRequest">
-    <input type="submit" name="manager"></p>
-</form>
-
-<hr />
-
-<h2>Find Cheapest Building by Average Suite Cost</h2>
-        <form method="GET" action="CPSC304Project.php"> <!--refresh page when submitted-->
-            <input type="hidden" id="cheapestAVGRequeset" name="cheapestAVGRequeset">
-            <input type="submit" name="nestedAGG"></p>
-        </form>
-
-<hr />
-
-<h2>Number of Stalls for Parkades above Ground</h2>
-        <form method="GET" action="CPSC304Project.php"> <!--refresh page when submitted-->
-            <input type="hidden" id="parkadeStallsRequest" name="parkadeStallsRequest">
-            <input type="submit" name="parkadeStalls"></p>
-        </form>
 
 <hr />
 
@@ -414,16 +403,6 @@ function handleUpdateRequest() {
     OCICommit($db_conn);
 }
 
-function handleUpdateSuiteRentalRate() {
-    global $db_comm;
-
-    $unit_number = $_POST['unitNumber'];
-    $buildingID = $_POST['buildingID'];
-
-    $new_rate = $_POST['updatedRate'];
-
-    executePlainSQL("UPDATE Suites SET Rentalrate='" . $new_rate . "' WHERE Unitnum='" . $unit_number . "'");
-}
 
 function checkTableExists($table) {
     global $db_conn;
@@ -595,7 +574,7 @@ function handleResidentSelectRequest() {
 
     $resID = $_POST['insResidentID'];
     $result = executePlainSQL("SELECT * FROM Resident WHERE Resid = " . $_GET['insResidentID']);
-    
+
     echo printResult($result);
 }
 
@@ -626,12 +605,12 @@ function handleBuildingAttributeProjectRequest() {
     $result = executePlainSQL("SELECT  B.BuildingName, B.Yearbuilt, B.Numstories, M.ManagerName, B.City
         FROM Building B, Manager2 M
         WHERE M.ManagerID = B.ManagerID AND B.Buildingid  =  " . $_GET['bid']);
-    
+
     echo "<br>Retrieved data from table Building:<br>";
     echo "<table>";
     echo "<tr><th>Building Name</th><th>Year Built</th><th>Number of Stories</th><th>Managed By:</th><th>Located In</th></tr>";
     while ($row = OCI_Fetch_Array($result, OCI_BOTH)) {
-        echo "<tr><td>" . $row[0] . "</td><td>" . $row[1] .  "</td><td>" . $row[2] .  "</td><td>" . $row[3] . "</td><td>" . $row[4] . "</td></tr>"; 
+        echo "<tr><td>" . $row[0] . "</td><td>" . $row[1] .  "</td><td>" . $row[2] .  "</td><td>" . $row[3] . "</td><td>" . $row[4] . "</td></tr>";
     }
     echo "</table>";
 }
@@ -678,7 +657,7 @@ function handleAggGroupByRequest() {
     global $db_conn;
 
     $result = executePlainSQL("SELECT COUNT(*), SuiteBuildingid FROM Suites GROUP BY SuiteBuildingid");
-    
+
     echo "<br>Retrieved data from table Suites:<br>";
     echo "<table>";
     echo "<tr><th>Count</th><th>SuiteBuildingid</th></tr>";
@@ -688,7 +667,7 @@ function handleAggGroupByRequest() {
     echo "</table>";
 }
 
-// Nested Aggegation with Grouping
+// Nested Aggregation with Grouping
 function handleFindCheapestAverageRequest() {
     global $db_conn;
 
@@ -698,7 +677,7 @@ function handleFindCheapestAverageRequest() {
     GROUP BY B.Buildingname, S.SuiteBuildingid
     HAVING AVG(S.Cost) >= ALL (SELECT AVG(S1.Cost) FROM Suites S1, Building B1 GROUP BY S1.SuiteBuildingid)");
 
-   
+
     echo "<br>Retrieved data from table Suites:<br>";
     echo "<table>";
     echo "<tr><th>BuildingID</th><th>Building Name</th><th>Average Cost </th></tr>";
@@ -756,8 +735,6 @@ function handlePOSTRequest() {
             handleUpdateRequest();
         } else if (array_key_exists('insertQueryRequest', $_POST)) {
             handleInsertRequest();
-        } else if (array_key_exists('updateRentalRateRequest', $_POST)) {
-            handleUpdateSuiteRentalRate();
         }
 
         disconnectFromDB();
@@ -793,7 +770,7 @@ function handleGETRequest() {
     }
 }
 
-if (isset($_POST['reset']) || isset($_POST['updateSubmit']) || isset($_POST['insertSubmit'])|| isset($_POST['removeResident'])) {
+if (isset($_POST['reset']) || isset($_POST['insertSubmit'])||isset($_POST['updateNumber'])|| isset($_POST['removeResident'])) {
     handlePOSTRequest();
 } else if (isset($_GET['countTupleRequest'])||
     isset($_GET['displayTupleRequest']) ||
